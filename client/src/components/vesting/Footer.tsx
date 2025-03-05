@@ -42,27 +42,27 @@ const socialLinks = [
   {
     name: "Twitter",
     icon: TwitterIcon,
-    url: "https://twitter.com/skyopslabs",
+    url: "https://x.com/SkyopsLabs",
   },
   {
     name: "Telegram",
     icon: SiTelegram,
-    url: "https://t.me/skyopslabs",
+    url: "https://t.me/SkyopsLabs",
   },
   {
     name: "Discord",
     icon: SiDiscord,
-    url: "https://discord.gg/skyopslabs",
+    url: "https://discord.gg/SkyopsLabs",
   },
   {
     name: "GitHub",
     icon: SiGithub,
-    url: "https://github.com/skyopslabs",
+    url: "https://github.com/SkyopsLabs",
   },
   {
     name: "Medium",
     icon: MediumIcon,
-    url: "https://medium.com/@skyopslabs",
+    url: "https://skyopslabs.medium.com",
   },
 ];
 
