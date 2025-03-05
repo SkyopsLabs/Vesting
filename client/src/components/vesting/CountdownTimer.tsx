@@ -38,15 +38,15 @@ export function CountdownTimer() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-center">Next release in:</h2>
+      <h2 className="text-2xl font-semibold text-center text-white">Next release in:</h2>
       <div className="flex gap-4 justify-center">
         {timeUnits.map((unit, index) => (
-          <Card key={unit.label} className="bg-gradient-to-b from-gray-50 to-white">
+          <Card key={unit.label} className="bg-black/20 backdrop-blur-sm border border-white/10 shadow-xl">
             <CardContent className="p-4 text-center">
-              <div className="text-4xl font-mono font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="text-4xl font-mono font-bold text-white">
                 {unit.value.toString().padStart(2, '0')}
               </div>
-              <div className="text-xs font-semibold text-gray-500 mt-1">
+              <div className="text-xs font-semibold text-gray-300 mt-1">
                 {unit.label}
               </div>
             </CardContent>
