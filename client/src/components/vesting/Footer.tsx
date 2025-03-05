@@ -24,7 +24,9 @@ export function Footer() {
 
           <div className="flex items-center gap-2 text-white/60">
             Powered by
-            <img src="/footer.png" alt="Skyops Logo" style={{ height: '2.15rem' }} />
+            <a href="https://skyopslabs.ai" target="_blank" rel="noopener noreferrer">
+              <img src="/footer.png" alt="Skyops Logo" style={{ height: '2.15rem' }} />
+            </a>
           </div>
         </div>
       </div>

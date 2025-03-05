@@ -16,7 +16,7 @@ export default function VestingPage() {
             {isConnected && address && (
               <AddressDisplay address={address} />
             )}
-            <div className={isConnected && address ? "ml-auto" : ""}>
+            <div className="ml-auto">
               <WalletConnect />
             </div>
           </div>
