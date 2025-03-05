@@ -4,7 +4,7 @@ import { TokenInfo } from "@/components/vesting/TokenInfo";
 
 export default function VestingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#20209c] to-[#0ea7ca]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-end mb-8">
           <WalletConnect />
@@ -12,10 +12,10 @@ export default function VestingPage() {
 
         <div className="space-y-12">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-white">
               Token Vesting Portal
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-200">
               Track and claim your vested SKYOPS tokens
             </p>
           </div>
