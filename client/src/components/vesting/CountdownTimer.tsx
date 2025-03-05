@@ -43,10 +43,10 @@ export function CountdownTimer() {
         {timeUnits.map((unit, index) => (
           <Card key={unit.label} className="bg-black/20 backdrop-blur-sm border border-white/10 shadow-xl">
             <CardContent className="p-4 text-center">
-              <div className="text-4xl font-mono font-bold text-white">
+              <div className="text-4xl font-mono font-medium tracking-wider text-white">
                 {unit.value.toString().padStart(2, '0')}
               </div>
-              <div className="text-xs font-semibold text-gray-300 mt-1">
+              <div className="text-xs font-mono font-medium text-gray-300 mt-1">
                 {unit.label}
               </div>
             </CardContent>

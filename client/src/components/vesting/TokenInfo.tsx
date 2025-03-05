@@ -32,15 +32,15 @@ export function TokenInfo() {
             <Lock className="h-5 w-5 text-blue-300" />
             <span className="text-sm font-medium text-gray-200">Locked tokens:</span>
           </div>
-          <span className="font-mono text-lg font-semibold text-white">1,000,000 SKYOPS</span>
+          <span className="font-mono text-lg font-medium tracking-wider text-white">1,000,000 SKYOPS</span>
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-300">Vesting Progress</span>
-            <span className="font-medium text-white">{vestingProgress}%</span>
+            <span className="font-mono font-medium text-white">{vestingProgress}%</span>
           </div>
-          <Progress value={vestingProgress} className="h-2 bg-white/10" indicatorClassName="bg-gradient-to-r from-blue-400 to-cyan-400" />
+          <Progress value={vestingProgress} className="h-2 bg-white/10" />
         </div>
 
         <div className="flex items-center justify-between">
@@ -48,7 +48,7 @@ export function TokenInfo() {
             <Coins className="h-5 w-5 text-cyan-300" />
             <span className="text-sm font-medium text-gray-200">Next unlock:</span>
           </div>
-          <span className="font-mono text-lg font-semibold text-white">250,000 SKYOPS</span>
+          <span className="font-mono text-lg font-medium tracking-wider text-white">250,000 SKYOPS</span>
         </div>
       </CardContent>
 
