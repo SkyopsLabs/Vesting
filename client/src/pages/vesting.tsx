@@ -2,13 +2,20 @@ import { WalletConnect } from "@/components/vesting/WalletConnect";
 import { CountdownTimer } from "@/components/vesting/CountdownTimer";
 import { TokenInfo } from "@/components/vesting/TokenInfo";
 import { Footer } from "@/components/vesting/Footer";
+import { AddressDisplay } from "@/components/vesting/AddressDisplay";
+import { useWeb3Store } from "@/lib/web3";
 
 export default function VestingPage() {
+  const { address, isConnected } = useWeb3Store();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#20209c] to-[#0ea7ca] flex flex-col">
       <div className="flex-grow">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex justify-end mb-8">
+          <div className="flex justify-between items-center mb-8">
+            {isConnected && address && (
+              <AddressDisplay address={address} />
+            )}
             <WalletConnect />
           </div>
 

@@ -48,10 +48,10 @@ export function WalletConnect() {
       onClick={handleDisconnect}
       className="bg-black/20 backdrop-blur-sm border border-white/10 text-white hover:bg-white/10 transition-all duration-200"
     >
-      <span className="mr-2 font-mono text-sm">
+      <span className="font-mono text-sm tracking-wider">
         {address?.slice(0, 6)}...{address?.slice(-4)}
       </span>
-      <LogOut className="h-4 w-4" />
+      <LogOut className="h-4 w-4 ml-2" />
     </Button>
   );
 }
