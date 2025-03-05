@@ -35,7 +35,7 @@ export function WalletConnect() {
     return (
       <Button 
         onClick={handleConnect}
-        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+        className="bg-black/20 backdrop-blur-sm border border-white/10 text-white hover:bg-white/10 transition-all duration-200"
       >
         <Wallet className="mr-2 h-4 w-4" />
         Connect Wallet
@@ -46,8 +46,7 @@ export function WalletConnect() {
   return (
     <Button 
       onClick={handleDisconnect}
-      variant="outline"
-      className="border-gray-200"
+      className="bg-black/20 backdrop-blur-sm border border-white/10 text-white hover:bg-white/10 transition-all duration-200"
     >
       <span className="mr-2 font-mono text-sm">
         {address?.slice(0, 6)}...{address?.slice(-4)}
