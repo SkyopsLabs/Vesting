@@ -16,12 +16,12 @@ export default function VestingPage() {
               Token Vesting Portal
             </h1>
             <p className="text-gray-600">
-              Track and claim your vested DAETA tokens
+              Track and claim your vested SKYOPS tokens
             </p>
           </div>
 
           <CountdownTimer />
-          
+
           <div className="mt-12">
             <TokenInfo />
           </div>
