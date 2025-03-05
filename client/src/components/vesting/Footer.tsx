@@ -24,7 +24,7 @@ export function Footer() {
 
           <div className="flex items-center gap-2 text-white/60">
             Powered by
-            <span className="text-white font-semibold">skyops</span>
+            <img src="/footer.png" alt="Skyops Logo" className="h-5" />
           </div>
         </div>
       </div>
