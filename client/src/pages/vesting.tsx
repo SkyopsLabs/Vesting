@@ -13,15 +13,13 @@ export default function VestingPage() {
       <div className="flex-grow">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
-            {isConnected && address && (
-              <AddressDisplay address={address} />
-            )}
+            {isConnected && address && <AddressDisplay address={address} />}
             <div className="ml-auto">
               <WalletConnect />
             </div>
           </div>
 
-          <div className="space-y-12">
+          <div className="space-y-12 ">
             <div className="text-center space-y-4">
               <h1 className="text-4xl font-bold text-white">
                 Token Vesting Portal

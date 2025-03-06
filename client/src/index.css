@@ -10,6 +10,10 @@
     @apply border-border;
   }
 
+  .bord {
+    border: 1px solid blueviolet
+  }
+
   body {
     @apply antialiased bg-background text-foreground;
     font-family: 'Azeret Mono', monospace;
