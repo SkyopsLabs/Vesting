@@ -1,6 +1,12 @@
 import { ethers } from "ethers";
 import { create } from "zustand";
 
+declare global {
+  interface Window {
+    ethereum: any;
+  }
+}
+
 interface Web3State {
   address: string | null;
   isConnected: boolean;
@@ -17,31 +23,36 @@ export const useWeb3Store = create<Web3State>((set) => ({
   signer: null,
   connect: async () => {
     if (!window.ethereum) {
-      throw new Error("MetaMask not installed");
+      throw new Error("No Ethereum provider found");
     }
+
+    // Attempt to reset provider selection
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("wallet_requestPermissions", [{ eth_accounts: {} }]);
+
       const accounts = await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();
-      
+
       set({
         address: accounts[0],
         isConnected: true,
         provider,
-        signer
+        signer,
       });
     } catch (error) {
       console.error("Failed to connect wallet:", error);
       throw error;
     }
   },
+
   disconnect: () => {
     set({
       address: null,
       isConnected: false,
       provider: null,
-      signer: null
+      signer: null,
     });
-  }
+  },
 }));
