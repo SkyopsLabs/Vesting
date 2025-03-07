@@ -50,7 +50,7 @@ export function TokenInfo() {
         const totalAmount = Number(plan[5]); // plan.totalAmount
         const released = Number(plan[7]); // plan.released
 
-        setStart(launchDate);
+        setStart(launchDate * 1000);
 
         setLockedTokens((totalAmount - released) / 10 ** 18);
         console.log(released / 10 ** 18, totalAmount / 10 ** 18, "Okay");
