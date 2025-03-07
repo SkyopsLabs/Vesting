@@ -30,7 +30,7 @@ export const useWeb3Store = create<Web3State>((set) => ({
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("wallet_requestPermissions", [{ eth_accounts: {} }]);
+      // await provider.send("wallet_requestPermissions", [{ eth_accounts: {} }]);
 
       const accounts = await provider.send("eth_requestAccounts", []);
       const signer = await provider.getSigner();

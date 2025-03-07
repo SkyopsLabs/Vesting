@@ -8,12 +8,13 @@ import { Lock, Coins } from "lucide-react";
 import { useWeb3Store } from "@/lib/web3";
 
 // Contract Details
-const CONTRACT_ADDRESS = "0x0277E5E3EA6D6AeFFF2BEA4d897eb41427EcC1e4";
+const CONTRACT_ADDRESS = "0xd20f16fec4bf189854EDAf4d2dA5Ab95E1aA1dd5";
 const ABI = [
-  "function getPlanByAddressAndIndex(address holder, uint256 index) view returns (tuple(address,uint256,uint256,uint256,uint256,uint256,bool,uint256,uint256,uint256,bool))",
+  "function getPlanByAddressAndIndex(address holder, uint256 index) view returns (tuple(address,uint256,uint256,uint256,bool,uint256,uint256,uint256,bool))",
   "function getReleasableAmount(bytes32 planId) view returns (uint256)",
   "function releaseTokens(bytes32 planId, uint256 amount) public",
   "function computePlanId(address holder, uint256 index) public pure returns (bytes32)",
+  "function getNextReleaseTime(address beneficiary) public view returns (uint256)",
 ];
 
 export function TokenInfo() {
@@ -21,44 +22,80 @@ export function TokenInfo() {
   const [vestingProgress, setVestingProgress] = useState(0);
   const [lockedTokens, setLockedTokens] = useState(0);
   const [nextUnlock, setNextUnlock] = useState<number>(0);
-  const { provider, signer } = useWeb3Store();
+  const [start, setStart] = useState<number>(0);
+  const { provider, signer, isConnected, address } = useWeb3Store();
+  const [nextReleaseTime, setNextReleaseTime] = useState<any>(null);
 
   const [planId, setPlanId] = useState<null | string>(null);
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+  console.log(address);
 
   // Fetch vesting details
   // Fetch vesting details
   useEffect(() => {
     async function fetchVestingData() {
-      if (!contract || !signer) return;
-      const address = await signer.getAddress();
+      if (!isConnected) {
+        setNextUnlock(0);
+        setLockedTokens(0);
+        return;
+      }
+      if (!contract || !address) return;
       try {
         const index = 0; // Assuming first vesting plan
         const computedPlanId = await contract.computePlanId(address, index);
         setPlanId(computedPlanId);
 
         const plan = await contract.getPlanByAddressAndIndex(address, index);
-        const totalAmount = Number(plan[7]); // plan.totalAmount
-        const released = Number(plan[8]); // plan.released
+        const launchDate = Number(plan[1]); // plan.start
+        const totalAmount = Number(plan[5]); // plan.totalAmount
+        const released = Number(plan[7]); // plan.released
 
-        setLockedTokens(totalAmount / 10 ** 18);
+        setStart(launchDate);
+
+        setLockedTokens((totalAmount - released) / 10 ** 18);
+        console.log(released / 10 ** 18, totalAmount / 10 ** 18, "Okay");
         setVestingProgress((released / totalAmount) * 100);
 
-        const releasable = await contract.getReleasableAmount(computedPlanId);
-        setNextUnlock(Number(releasable));
+        const releasable: ethers.BigNumberish =
+          await contract.getReleasableAmount(computedPlanId);
+        const releasableAmount = ethers.formatUnits(releasable, 18);
+        setNextUnlock(parseFloat(releasableAmount));
       } catch (error) {
         console.error("Error fetching vesting data:", error);
       }
     }
+    const fetchReleaseTime = async () => {
+      if (!address || !isConnected) return;
+
+      try {
+        const releaseTime: ethers.BigNumberish =
+          await contract.getNextReleaseTime(address);
+        setNextReleaseTime(parseInt(releaseTime.toString()) * 1000); // Convert to milliseconds
+      } catch (error) {
+        console.error("Error fetching vesting release time:", error);
+        setNextReleaseTime(0); // Convert to milliseconds
+      }
+    };
+
+    fetchReleaseTime();
     fetchVestingData();
-  }, [contract, signer]);
+  }, [contract, isConnected, address]);
 
   // Claim function
   const handleClaim = async () => {
-    if (!contract || !signer || !planId) return;
+    if (!contract || !signer || !planId || nextUnlock <= 0) {
+      toast({
+        title: "No tokens available to claim",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      const tx = await contract.releaseTokens(planId, nextUnlock);
+      // Ensure nextUnlock is properly converted
+      const amountToClaim = ethers.parseUnits(nextUnlock.toString(), 18);
+
+      const tx = await contract.releaseTokens(planId, amountToClaim);
       await tx.wait(); // Wait for transaction confirmation
 
       toast({
@@ -90,7 +127,7 @@ export function TokenInfo() {
             </span>
           </div>
           <span className="font-mono text-lg font-medium tracking-wider text-white">
-            {lockedTokens.toLocaleString()} SKYOPS
+            {lockedTokens} SKYOPS
           </span>
         </div>
 
@@ -122,7 +159,7 @@ export function TokenInfo() {
       <CardFooter className="pb-6">
         <Button
           onClick={handleClaim}
-          disabled={(nextUnlock as number) <= 0}
+          disabled={(nextUnlock as number) <= 0 || Date.now() < start}
           className={`w-full text-white border transition-all duration-200 ${
             (nextUnlock as number) > 0
               ? "bg-white/10 hover:bg-white/20 border-white/20"

@@ -12,9 +12,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 contract Vesting is Ownable, ReentrancyGuard {
     struct VestingPlan {
         address beneficiary;
-        uint256 cliff;
         uint256 start;
-        uint256 launch;
         uint256 duration;
         uint256 interval;
         bool canRevoke;
@@ -30,48 +28,68 @@ contract Vesting is Ownable, ReentrancyGuard {
     mapping(bytes32 => VestingPlan) private plans;
     uint256 private totalAmountVested;
     mapping(address => uint256) private vestingCount;
+    address[] public admins;
+
+    event PlanAdded(
+        bytes32 indexed planId,
+        address indexed beneficiary,
+        uint256 totalAmount
+    );
+    event PlanRevoked(bytes32 indexed planId, uint256 remainingAmount);
+    event TokensReleased(bytes32 indexed planId, uint256 amount);
+    event FundsWithdrawn(address indexed owner, uint256 amount);
 
     modifier activePlan(bytes32 planId) {
         require(!plans[planId].revoked, "Plan is revoked");
         _;
     }
 
+    modifier onlyAdmin() {
+        bool isAdmin = false;
+        for (uint256 i = 0; i < admins.length; i++) {
+            if (admins[i] == msg.sender) {
+                isAdmin = true;
+                break;
+            }
+        }
+        require(isAdmin, "Caller is not an admin");
+        _;
+    }
+
     constructor(address token_) Ownable(msg.sender) {
         require(token_ != address(0x0), "Invalid token address");
         token = IERC20(token_);
+        admins.push(msg.sender); // Add contract deployer to admins
     }
 
     receive() external payable {}
 
     fallback() external payable {}
 
+    function addAdmin(address admin) external onlyAdmin {
+        admins.push(admin);
+    }
+
     function addPlan(
         address _beneficiary,
         uint256 _start,
-        uint256 _cliff,
-        uint256 _launch,
         uint256 _duration,
         uint256 _interval,
         uint256 _launchPercent,
         bool _canRevoke,
         uint256 _amount
-    ) external onlyOwner {
+    ) external onlyAdmin {
         require(getAvailableAmount() >= _amount, "Insufficient tokens");
         require(_duration > 0, "Duration must be > 0");
-        require(_launch > 0, "Launch must be > 0");
+        require(_start > 0, "start must be > 0");
         require(_amount > 0, "Amount must be > 0");
         require(_interval >= 1, "Interval must be >= 1");
-        require(_duration >= _cliff, "Duration must be >= cliff");
 
         bytes32 planId = getNextPlanId(_beneficiary);
-        uint256 cliffTime = _start + _cliff;
-        uint256 launchTime = _start + _launch;
 
         plans[planId] = VestingPlan(
             _beneficiary,
-            cliffTime,
             _start,
-            launchTime,
             _duration,
             _interval,
             _canRevoke,
@@ -83,13 +101,18 @@ contract Vesting is Ownable, ReentrancyGuard {
 
         totalAmountVested += _amount;
         planIds.push(planId);
-        vestingCount[_beneficiary]++;
+        unchecked {
+            vestingCount[_beneficiary]++;
+        }
+
+        emit PlanAdded(planId, _beneficiary, _amount);
     }
 
     function cancelPlan(bytes32 planId) external onlyOwner activePlan(planId) {
         VestingPlan storage plan = plans[planId];
         require(plan.canRevoke, "Plan cannot be revoked");
 
+        plan.revoked = true;
         uint256 releasableAmount = calculateReleasable(plan);
         if (releasableAmount > 0) {
             releaseTokens(planId, releasableAmount);
@@ -97,12 +120,18 @@ contract Vesting is Ownable, ReentrancyGuard {
 
         uint256 remainingAmount = plan.totalAmount - plan.released;
         totalAmountVested -= remainingAmount;
-        plan.revoked = true;
+        emit PlanRevoked(planId, remainingAmount);
     }
 
     function withdrawFunds(uint256 amount) external nonReentrant onlyOwner {
+        uint256 contractBalance = token.balanceOf(address(this));
+        require(
+            contractBalance - amount >= totalAmountVested,
+            "Insufficient funds for vesting"
+        );
         require(getAvailableAmount() >= amount, "Insufficient funds");
         token.transfer(msg.sender, amount);
+        emit FundsWithdrawn(msg.sender, amount);
     }
 
     function releaseTokens(
@@ -120,6 +149,7 @@ contract Vesting is Ownable, ReentrancyGuard {
         plan.released += amount;
         totalAmountVested -= amount;
         token.transfer(payable(plan.beneficiary), amount);
+        emit TokensReleased(planId, amount);
     }
 
     function getPlanCount(
@@ -160,7 +190,8 @@ contract Vesting is Ownable, ReentrancyGuard {
     }
 
     function getAvailableAmount() public view returns (uint256) {
-        return token.balanceOf(address(this)) - totalAmountVested;
+        uint256 balance = token.balanceOf(address(this));
+        return balance > totalAmountVested ? balance - totalAmountVested : 0;
     }
 
     function getNextPlanId(address holder) public view returns (bytes32) {
@@ -184,28 +215,42 @@ contract Vesting is Ownable, ReentrancyGuard {
         VestingPlan memory plan
     ) internal view returns (uint256) {
         uint256 currentTime = block.timestamp;
+        uint256 launchAmount = (plan.totalAmount * plan.launchPercent) / 100;
 
-        if (
-            currentTime < plan.cliff ||
-            currentTime < plan.launch ||
-            plan.revoked
-        ) {
+        if (plan.revoked) {
             return 0;
-        } else if (currentTime >= plan.start + plan.duration) {
-            return plan.totalAmount - plan.released;
-        } else {
-            uint256 launchAmount = (plan.totalAmount * plan.launchPercent) /
-                100;
-            uint256 remainingAmount = plan.totalAmount - launchAmount;
-            uint256 elapsedTime = currentTime - plan.start;
-            uint256 elapsedPeriods = elapsedTime / plan.interval;
-            uint256 vestedTime = elapsedPeriods * plan.interval;
-
-            uint256 vestedAmount = (remainingAmount * vestedTime) /
-                plan.duration;
-            return vestedAmount + launchAmount - plan.released;
         }
+
+        // Before launch, return only the initial unlock amount
+        if (currentTime < plan.start) {
+            return launchAmount;
+        }
+
+        // After full vesting period, return everything remaining
+        if (currentTime >= plan.start + plan.duration) {
+            return plan.totalAmount - plan.released;
+        }
+
+        // Vesting in **discrete** intervals after launch
+        uint256 remainingAmount = plan.totalAmount - launchAmount;
+        uint256 elapsedTime = currentTime - plan.start;
+        uint256 elapsedIntervals = elapsedTime / plan.interval;
+
+        // Total number of intervals available
+        uint256 totalIntervals = plan.duration / plan.interval;
+
+        // Ensure we don’t release more than possible
+        if (elapsedIntervals > totalIntervals) {
+            elapsedIntervals = totalIntervals;
+        }
+
+        uint256 vestedAmount = (remainingAmount * elapsedIntervals) /
+            totalIntervals;
+        uint256 totalVested = vestedAmount + launchAmount;
+
+        return totalVested > plan.released ? totalVested - plan.released : 0;
     }
+
     function getNextReleaseTime(
         address beneficiary
     ) public view returns (uint256) {
@@ -224,14 +269,10 @@ contract Vesting is Ownable, ReentrancyGuard {
             return 0;
         }
 
-        // If still in cliff period, next release is after cliff
-        if (currentTime < plan.cliff) {
-            return plan.cliff;
-        }
-
         // If launch time is not reached, next release is at launch
-        if (currentTime < plan.launch) {
-            return plan.launch;
+        if (currentTime < plan.start) {
+            return plan.start;
+            // return 2;
         }
 
         // Calculate next interval release time

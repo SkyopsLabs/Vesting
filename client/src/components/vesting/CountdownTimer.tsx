@@ -8,7 +8,7 @@ interface TimeUnit {
   label: string;
 }
 
-const CONTRACT_ADDRESS = "0x0277E5E3EA6D6AeFFF2BEA4d897eb41427EcC1e4";
+const CONTRACT_ADDRESS = "0xd20f16fec4bf189854EDAf4d2dA5Ab95E1aA1dd5";
 const ABI = [
   "function getNextReleaseTime(address beneficiary) public view returns (uint256)",
 ];
@@ -26,6 +26,7 @@ export function CountdownTimer() {
   const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
   useEffect(() => {
+    if (!address) return;
     const fetchReleaseTime = async () => {
       try {
         const releaseTime: ethers.BigNumberish =
